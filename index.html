@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parcours Utilisateur — Plateforme RAG Emailing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'monospace'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'brutal': {
+                            'black': '#1a1a1a',
+                            'white': '#fafafa',
+                            'yellow': '#FFE500',
+                            'blue': '#0066FF',
+                            'pink': '#FF3366',
+                            'green': '#00CC88',
+                            'purple': '#7C3AED',
+                            'orange': '#FF6B00',
+                            'cyan': '#06B6D4',
+                            'red': '#EF4444',
+                        }
+                    },
+                    boxShadow: {
+                        'brutal': '4px 4px 0px 0px #1a1a1a',
+                        'brutal-md': '6px 6px 0px 0px #1a1a1a',
+                        'brutal-lg': '8px 8px 0px 0px #1a1a1a',
+                        'brutal-xl': '12px 12px 0px 0px #1a1a1a',
+                        'brutal-hover': '2px 2px 0px 0px #1a1a1a',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+
+        .brutal-border { border: 3px solid #1a1a1a; }
+        .brutal-border-2 { border: 2px solid #1a1a1a; }
+        .brutal-border-4 { border: 4px solid #1a1a1a; }
+
+        .brutal-btn { transition: all 0.1s ease; }
+        .brutal-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px 0px #1a1a1a; }
+        .brutal-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px 0px #1a1a1a; }
+
+        .brutal-card { transition: all 0.15s ease; }
+        .brutal-card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px 0px #1a1a1a; }
+
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+        @keyframes pulse-scale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes blink-caret { 0%, 100% { border-color: transparent; } 50% { border-color: #00CC88; } }
+        @keyframes success-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(0,204,136,0.4); } 50% { box-shadow: 0 0 0 20px rgba(0,204,136,0); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes rotate-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes bounce-in { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes confetti-fall { to { top: 110vh; transform: rotate(720deg); } }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes count-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+        @keyframes dash-flow { to { stroke-dashoffset: -20; } }
+
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-marquee { animation: marquee 35s linear infinite; }
+        .animate-wiggle { animation: wiggle 2s ease-in-out infinite; }
+        .animate-pulse-scale { animation: pulse-scale 2s ease-in-out infinite; }
+        .animate-success-pulse { animation: success-pulse 2s ease-in-out infinite; }
+        .animate-rotate-slow { animation: rotate-slow 20s linear infinite; }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #00CC88, #0066FF, #7C3AED);
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; animation: gradient-shift 4s ease infinite;
+        }
+        .gradient-text-fire {
+            background: linear-gradient(135deg, #FF3366, #FF6B00, #FFE500);
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; animation: gradient-shift 3s ease infinite;
+        }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .reveal-left { opacity: 0; transform: translateX(-40px); transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-left.active { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(40px); transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-right.active { opacity: 1; transform: translateX(0); }
+        .reveal-scale { opacity: 0; transform: scale(0.8); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .reveal-scale.active { opacity: 1; transform: scale(1); }
+
+        .stagger-1 { transition-delay: 0.1s; } .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; } .stagger-4 { transition-delay: 0.4s; }
+        .stagger-5 { transition-delay: 0.5s; } .stagger-6 { transition-delay: 0.6s; }
+        .stagger-7 { transition-delay: 0.7s; } .stagger-8 { transition-delay: 0.8s; }
+
+        .noise-bg { position: relative; }
+        .noise-bg::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.03; pointer-events: none; z-index: 1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        .grid-bg {
+            background-image: linear-gradient(rgba(26,26,26,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(26,26,26,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .dot-bg {
+            background-image: radial-gradient(circle, rgba(26,26,26,0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #fafafa; border-left: 3px solid #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #1a1a1a; border: 2px solid #fafafa; }
+        ::-webkit-scrollbar-thumb:hover { background: #0066FF; }
+
+        .ticker-wrap { overflow: hidden; white-space: nowrap; }
+        .ticker { display: inline-block; animation: marquee 35s linear infinite; }
+
+        .progress-bar {
+            position: fixed; top: 0; left: 0; height: 4px;
+            background: linear-gradient(90deg, #0066FF, #7C3AED, #FF3366);
+            z-index: 10001; transition: width 0.1s ease;
+        }
+
+        .step-card { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .step-card:hover { transform: translateY(-4px) rotate(-0.3deg); }
+
+        .tech-chip { transition: all 0.15s ease; }
+        .tech-chip:hover { transform: translateY(-2px); box-shadow: 3px 3px 0px 0px #1a1a1a; }
+
+        .tooltip-trigger { position: relative; }
+        .tooltip-trigger .tooltip {
+            position: absolute; bottom: calc(100% + 8px); left: 50%;
+            transform: translateX(-50%) scale(0.8); background: #1a1a1a;
+            color: white; padding: 6px 12px; font-size: 11px;
+            font-family: 'JetBrains Mono', monospace; white-space: nowrap;
+            opacity: 0; pointer-events: none; transition: all 0.2s ease; border: 2px solid #0066FF;
+        }
+        .tooltip-trigger:hover .tooltip { opacity: 1; transform: translateX(-50%) scale(1); }
+
+        .screen-mock { transition: all 0.3s ease; }
+        .screen-mock:hover { transform: scale(1.01); box-shadow: 10px 10px 0px 0px #1a1a1a; }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #00CC88; animation: success-pulse 2s ease-in-out infinite; }
+
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99998; }
+        .confetti { position: absolute; width: 10px; height: 10px; top: -10px; animation: confetti-fall linear forwards; }
+
+        .terminal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 100000; display: none;
+            align-items: center; justify-content: center;
+        }
+        .terminal-overlay.active { display: flex; }
+        .terminal-box {
+            width: 90%; max-width: 700px; background: #0a0a0a;
+            border: 3px solid #0066FF; padding: 24px;
+            font-family: 'JetBrains Mono', monospace; color: #0066FF;
+            font-size: 14px; line-height: 1.8; max-height: 80vh; overflow-y: auto;
+        }
+        .terminal-box .cursor {
+            display: inline-block; width: 8px; height: 16px; background: #0066FF;
+            animation: blink-caret 0.8s step-end infinite; vertical-align: middle; margin-left: 4px;
+        }
+
+        .timeline-line {
+            position: absolute; left: 28px; top: 0; bottom: 0; width: 4px;
+            background: linear-gradient(to bottom, #0066FF, #7C3AED, #FF3366, #00CC88);
+        }
+
+        @media (max-width: 768px) {
+            .brutal-border { border-width: 2px; }
+            .brutal-border-4 { border-width: 3px; }
+            .timeline-line { left: 18px; }
+        }
+
+        .magnetic-btn { transition: transform 0.2s ease; }
+        .ripple { position: absolute; border-radius: 50%; background: rgba(0,102,255,0.3); transform: scale(0); animation: ripple-out 0.6s ease-out; pointer-events: none; }
+        @keyframes ripple-out { to { transform: scale(4); opacity: 0; } }
+    </style>
+</head>
+<body class="bg-brutal-white text-brutal-black overflow-x-hidden">
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Confetti container -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <!-- Terminal Easter Egg -->
+    <div class="terminal-overlay" id="terminalOverlay">
+        <div class="terminal-box" id="terminalBox">
+            <div style="color: #FFE500; margin-bottom: 16px;">[ PLATEFORME RAG EMAILING — DIAGNOSTIC SYSTEME ]</div>
+            <div>> Chargement modules IA.................. <span style="color:#00CC88">OK</span></div>
+            <div>> Connexion PostgreSQL + pgvector......... <span style="color:#00CC88">OK</span></div>
+            <div>> Pipeline RAG (Retrieval)................ <span style="color:#00CC88">OK</span></div>
+            <div>> Pipeline RAG (Augmented)................ <span style="color:#00CC88">OK</span></div>
+            <div>> Pipeline RAG (Generation)............... <span style="color:#00CC88">OK</span></div>
+            <div>> OpenAI Embeddings...................... <span style="color:#00CC88">OK</span></div>
+            <div>> API Claude / GPT-4..................... <span style="color:#00CC88">OK</span></div>
+            <div>> Brevo SMTP + Webhooks.................. <span style="color:#00CC88">OK</span></div>
+            <div>> Celery + Redis workers................. <span style="color:#00CC88">OK</span></div>
+            <div>> S3 / MinIO storage..................... <span style="color:#00CC88">OK</span></div>
+            <div>> Sentry monitoring...................... <span style="color:#00CC88">OK</span></div>
+            <div>> Grafana dashboards..................... <span style="color:#00CC88">OK</span></div>
+            <div style="margin-top: 16px; color: #FFE500;">> STATUS : TOUS LES SYSTEMES OPERATIONNELS</div>
+            <div style="margin-top: 8px;">> Temps moyen generation : <span style="color:#00CC88; font-weight:bold;">~12s par email</span></div>
+            <div style="margin-top: 8px;">> Taux delivrabilite : <span style="color:#00CC88; font-weight:bold;">98.7%</span></div>
+            <div style="margin-top: 16px; color: #666;">Appuie sur Echap ou clique pour fermer<span class="cursor"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================== NAVIGATION ===================== -->
+    <nav class="fixed top-0 left-0 right-0 z-[9999] bg-brutal-white/95 backdrop-blur-sm brutal-border-2 border-t-0 border-l-0 border-r-0" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 lg:h-20">
+                <a href="#" class="flex items-center gap-2 group" id="logoBtn">
+                    <div class="w-8 h-8 lg:w-10 lg:h-10 bg-brutal-blue brutal-border-2 shadow-brutal flex items-center justify-center group-hover:bg-brutal-purple transition-colors">
+                        <span class="text-white font-black text-lg lg:text-xl">R</span>
+                    </div>
+                    <span class="font-black text-lg lg:text-xl tracking-tight">RAG <span class="text-brutal-blue">Mail</span></span>
+                </a>
+                <div class="hidden lg:flex items-center gap-1">
+                    <a href="#probleme" class="px-4 py-2 font-semibold text-sm hover:bg-brutal-pink hover:text-white brutal-btn transition-colors">Probleme</a>
+                    <a href="#architecture" class="px-4 py-2 font-semibold text-sm hover:bg-brutal-blue hover:text-white brutal-btn transition-colors">Architecture</a>
+                    <a href="#parcours" class="px-4 py-2 font-semibold text-sm hover:bg-brutal-purple hover:text-white brutal-btn transition-colors">Parcours</a>
+                    <a href="#resultats" class="px-4 py-2 font-semibold text-sm hover:bg-brutal-green hover:text-white brutal-btn transition-colors">Resultats</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="status-dot hidden sm:block"></div>
+                    <span class="px-4 py-2 lg:px-6 font-bold text-sm brutal-border-2 shadow-brutal brutal-btn bg-brutal-blue text-white font-mono">8 etapes</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===================== HERO ===================== -->
+    <section class="min-h-screen pt-20 lg:pt-24 relative noise-bg grid-bg flex flex-col">
+        <div class="ticker-wrap brutal-border-2 border-l-0 border-r-0 bg-brutal-blue py-2">
+            <div class="ticker">
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Next.js 16 + Tailwind</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; FastAPI + Celery</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; PostgreSQL + pgvector</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Claude / GPT-4</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; OpenAI Embeddings</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Brevo Emailing</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Sentry + Grafana</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Docker</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Next.js 16 + Tailwind</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; FastAPI + Celery</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; PostgreSQL + pgvector</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Claude / GPT-4</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; OpenAI Embeddings</span>
+                <span class="inline-block mx-8 font-bold text-sm text-white">&#x2713; Brevo Emailing</span>
+            </div>
+        </div>
+
+        <div class="flex-1 flex items-center">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 w-full">
+                <div class="max-w-5xl">
+                    <div class="reveal inline-flex items-center gap-2 bg-brutal-white brutal-border-2 shadow-brutal px-4 py-2 mb-8">
+                        <span class="status-dot"></span>
+                        <span class="font-mono text-xs font-bold">Parcours utilisateur — Plateforme RAG Emailing</span>
+                    </div>
+
+                    <h1 class="reveal stagger-1 text-5xl sm:text-6xl lg:text-8xl font-black leading-[0.9] tracking-tight mb-8">
+                        De 2-3 jours<br>
+                        <span class="gradient-text-fire">a 45 minutes</span><span class="text-brutal-blue">.</span><br>
+                        <span class="gradient-text">RAG Emailing</span><span class="text-brutal-pink">.</span>
+                    </h1>
+
+                    <p class="reveal stagger-2 text-xl lg:text-2xl text-gray-600 max-w-3xl leading-relaxed mb-10">
+                        Ce que fait Marie a chaque etape <strong>ET</strong> ce qui tourne en dessous. 8 etapes, du probleme a la solution, avec chaque outil technique explique.
+                    </p>
+
+                    <div class="reveal stagger-3 flex flex-wrap gap-4 mb-12">
+                        <a href="#parcours" class="magnetic-btn px-8 py-4 bg-brutal-blue text-white font-black text-lg brutal-border-4 shadow-brutal-lg brutal-btn relative overflow-hidden">
+                            <span class="relative z-10">Voir le parcours</span>
+                        </a>
+                        <a href="#probleme" class="magnetic-btn px-8 py-4 bg-brutal-pink text-white font-black text-lg brutal-border-4 shadow-brutal-lg brutal-btn">
+                            Le probleme avant
+                        </a>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="reveal stagger-4 flex flex-wrap gap-4">
+                        <div class="brutal-border-2 bg-white px-4 py-3 shadow-brutal flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-brutal-blue"></div>
+                            <span class="text-xs font-bold font-mono">Action utilisateur</span>
+                        </div>
+                        <div class="brutal-border-2 bg-white px-4 py-3 shadow-brutal flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-brutal-green"></div>
+                            <span class="text-xs font-bold font-mono">Automatique</span>
+                        </div>
+                        <div class="brutal-border-2 bg-white px-4 py-3 shadow-brutal flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-brutal-purple"></div>
+                            <span class="text-xs font-bold font-mono">Intelligence artificielle</span>
+                        </div>
+                        <div class="brutal-border-2 bg-white px-4 py-3 shadow-brutal flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-brutal-orange"></div>
+                            <span class="text-xs font-bold font-mono">Outils techniques</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating decorative elements -->
+        <div class="absolute top-32 right-8 lg:right-24 w-16 h-16 lg:w-24 lg:h-24 bg-brutal-yellow brutal-border-2 shadow-brutal animate-float opacity-60 hidden sm:block" style="animation-delay: 0.5s;"></div>
+        <div class="absolute bottom-32 right-16 lg:right-48 w-12 h-12 lg:w-16 lg:h-16 bg-brutal-pink brutal-border-2 shadow-brutal animate-float opacity-40 hidden sm:block" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 right-4 lg:right-16 w-8 h-8 bg-brutal-green brutal-border-2 animate-wiggle opacity-50 hidden md:block"></div>
+    </section>
+
+    <!-- ===================== SECTION: LE PROBLEME ===================== -->
+    <section id="probleme" class="py-20 lg:py-32 relative noise-bg dot-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="reveal inline-block px-5 py-2 bg-brutal-red text-white font-mono font-bold text-sm brutal-border-2 shadow-brutal mb-6">LE PROBLEME AUJOURD'HUI</div>
+                <h2 class="reveal stagger-1 text-4xl lg:text-6xl font-black leading-tight">
+                    Avant la plateforme<span class="text-brutal-red">.</span>
+                </h2>
+                <p class="reveal stagger-2 text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+                    Marie travaille dans une association caritative. Pour chaque campagne d'appel aux dons, c'est le meme cauchemar.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                <!-- Pain point 1 -->
+                <div class="reveal stagger-1 brutal-card brutal-border bg-white p-6 shadow-brutal-md">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-brutal-red brutal-border-2 shadow-brutal flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-black text-lg">30</span>
+                        </div>
+                        <span class="font-mono text-xs text-gray-400 font-bold">MINUTES PERDUES</span>
+                    </div>
+                    <h3 class="font-black text-lg mb-2">Recherche dans les dossiers</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">30 minutes a chercher les anciennes campagnes dans ses dossiers, dispersees entre mails, Drive et disque dur.</p>
+                </div>
+
+                <!-- Pain point 2 -->
+                <div class="reveal stagger-2 brutal-card brutal-border bg-white p-6 shadow-brutal-md">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-brutal-orange brutal-border-2 shadow-brutal flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-black text-lg">3</span>
+                        </div>
+                        <span class="font-mono text-xs text-gray-400 font-bold">FICHIERS EXCEL</span>
+                    </div>
+                    <h3 class="font-black text-lg mb-2">Jonglage entre fichiers</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">3 fichiers Excel ouverts en meme temps pour retrouver stats et segments. Copier-coller entre onglets, perte de donnees.</p>
+                </div>
+
+                <!-- Pain point 3 -->
+                <div class="reveal stagger-3 brutal-card brutal-border bg-white p-6 shadow-brutal-md">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-brutal-pink brutal-border-2 shadow-brutal flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-black text-xl">C</span>
+                        </div>
+                        <span class="font-mono text-xs text-gray-400 font-bold">COPIER-COLLER</span>
+                    </div>
+                    <h3 class="font-black text-lg mb-2">Inspiration manuelle</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Copier-coller d'anciens emails pour s'inspirer. Aucune garantie de prendre la meilleure campagne comme reference.</p>
+                </div>
+
+                <!-- Pain point 4 -->
+                <div class="reveal stagger-4 brutal-card brutal-border bg-white p-6 shadow-brutal-md">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-brutal-purple brutal-border-2 shadow-brutal flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-black text-xl">R</span>
+                        </div>
+                        <span class="font-mono text-xs text-gray-400 font-bold">REECRITURE</span>
+                    </div>
+                    <h3 class="font-black text-lg mb-2">Reecriture depuis zero</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Reecriture manuelle de chaque email depuis zero. Le meme travail, encore et encore, a chaque nouvelle campagne.</p>
+                </div>
+
+                <!-- Pain point 5 -->
+                <div class="reveal stagger-5 brutal-card brutal-border bg-white p-6 shadow-brutal-md">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-brutal-cyan brutal-border-2 shadow-brutal flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-black text-xl">?</span>
+                        </div>
+                        <span class="font-mono text-xs text-gray-400 font-bold">APPROXIMATIF</span>
+                    </div>
+                    <h3 class="font-black text-lg mb-2">Ciblage au hasard</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">Ciblage approximatif — elle ne sait pas vraiment quel segment viser. Les bons donateurs ne recoivent pas le bon message.</p>
+                </div>
+
+                <!-- Pain point 6 - THE BIG ONE -->
+                <div class="reveal stagger-6 brutal-card brutal-border-4 bg-brutal-red text-white p-6 shadow-brutal-lg">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-white brutal-border-2 shadow-brutal flex items-center justify-center flex-shrink-0">
+                            <span class="text-brutal-red font-black text-lg">2-3</span>
+                        </div>
+                        <span class="font-mono text-xs text-red-200 font-bold">JOURS DE TRAVAIL</span>
+                    </div>
+                    <h3 class="font-black text-lg mb-2">Resultat : 2-3 jours par campagne</h3>
+                    <p class="text-red-100 text-sm leading-relaxed">Pour une seule campagne. Multipliez par le nombre de campagnes par an et vous comprenez le probleme.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== MARQUEE DIVIDER ===================== -->
+    <div class="ticker-wrap brutal-border-2 border-l-0 border-r-0 bg-brutal-black py-3">
+        <div class="ticker" style="animation-direction: reverse;">
+            <span class="inline-block mx-8 font-black text-sm text-brutal-yellow">IMPORT</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-green">NETTOYAGE</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-blue">SEGMENTATION</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-purple">RECHERCHE IA</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-pink">PARAMETRAGE</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-orange">GENERATION RAG</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-cyan">VALIDATION</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-green">ENVOI + SUIVI</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-yellow">IMPORT</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-green">NETTOYAGE</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-blue">SEGMENTATION</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-purple">RECHERCHE IA</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-pink">PARAMETRAGE</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-orange">GENERATION RAG</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-cyan">VALIDATION</span>
+            <span class="inline-block mx-8 font-black text-sm text-brutal-green">ENVOI + SUIVI</span>
+        </div>
+    </div>
+
+    <!-- ===================== SECTION: ARCHITECTURE ===================== -->
+    <section id="architecture" class="py-20 lg:py-32 relative noise-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="reveal inline-block px-5 py-2 bg-brutal-black text-white font-mono font-bold text-sm brutal-border-2 shadow-brutal mb-6">STACK TECHNIQUE</div>
+                <h2 class="reveal stagger-1 text-4xl lg:text-6xl font-black leading-tight">
+                    Vue d'ensemble des outils<span class="text-brutal-blue">.</span>
+                </h2>
+                <p class="reveal stagger-2 text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+                    Chaque brique technique a un role precis. Voici ce que Marie voit et ce qui tourne en dessous.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                <!-- Frontend -->
+                <div class="reveal stagger-1 brutal-card brutal-border bg-white p-8 shadow-brutal-md border-t-[6px] border-t-brutal-blue">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-3xl">🖥️</span>
+                        <h3 class="font-black text-lg text-brutal-blue">Interface</h3>
+                        <span class="ml-auto font-mono text-[10px] bg-blue-50 text-brutal-blue px-2 py-1 brutal-border-2 font-bold">CE QUE MARIE VOIT</span>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-blue flex-shrink-0"></span>
+                            <div><strong class="font-bold">Next.js 16</strong> <span class="text-gray-400 text-sm">— pages web, formulaires, dashboard</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-blue flex-shrink-0"></span>
+                            <div><strong class="font-bold">Tailwind CSS</strong> <span class="text-gray-400 text-sm">— design propre et responsive</span></div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Backend -->
+                <div class="reveal stagger-2 brutal-card brutal-border bg-white p-8 shadow-brutal-md border-t-[6px] border-t-brutal-green">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-3xl">🔧</span>
+                        <h3 class="font-black text-lg text-brutal-green">Moteur</h3>
+                        <span class="ml-auto font-mono text-[10px] bg-green-50 text-brutal-green px-2 py-1 brutal-border-2 font-bold">LOGIQUE METIER</span>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-green flex-shrink-0"></span>
+                            <div><strong class="font-bold">FastAPI</strong> <span class="text-gray-400 text-sm">— API Python, orchestration du flux</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-green flex-shrink-0"></span>
+                            <div><strong class="font-bold">Celery + Redis</strong> <span class="text-gray-400 text-sm">— taches longues en arriere-plan</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-green flex-shrink-0"></span>
+                            <div><strong class="font-bold">Uvicorn</strong> <span class="text-gray-400 text-sm">— serveur haute performance</span></div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Data -->
+                <div class="reveal stagger-3 brutal-card brutal-border bg-white p-8 shadow-brutal-md border-t-[6px] border-t-brutal-pink">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-3xl">💾</span>
+                        <h3 class="font-black text-lg text-brutal-pink">Donnees</h3>
+                        <span class="ml-auto font-mono text-[10px] bg-pink-50 text-brutal-pink px-2 py-1 brutal-border-2 font-bold">STOCKAGE</span>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-pink flex-shrink-0"></span>
+                            <div><strong class="font-bold">PostgreSQL</strong> <span class="text-gray-400 text-sm">— base de donnees principale</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-pink flex-shrink-0"></span>
+                            <div><strong class="font-bold">pgvector</strong> <span class="text-gray-400 text-sm">— recherche semantique</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-pink flex-shrink-0"></span>
+                            <div><strong class="font-bold">S3 / MinIO</strong> <span class="text-gray-400 text-sm">— stockage fichiers</span></div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- IA -->
+                <div class="reveal stagger-4 brutal-card brutal-border bg-white p-8 shadow-brutal-md border-t-[6px] border-t-brutal-purple">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-3xl">🤖</span>
+                        <h3 class="font-black text-lg text-brutal-purple">IA (cerveau)</h3>
+                        <span class="ml-auto font-mono text-[10px] bg-purple-50 text-brutal-purple px-2 py-1 brutal-border-2 font-bold">INTELLIGENCE</span>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-purple flex-shrink-0"></span>
+                            <div><strong class="font-bold">API Claude ou GPT-4</strong> <span class="text-gray-400 text-sm">— generation emails</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-purple flex-shrink-0"></span>
+                            <div><strong class="font-bold">OpenAI Embeddings</strong> <span class="text-gray-400 text-sm">— comprend le sens du texte</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-purple flex-shrink-0"></span>
+                            <div><strong class="font-bold">PyMuPDF</strong> <span class="text-gray-400 text-sm">— extraction texte PDF</span></div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Emailing -->
+                <div class="reveal stagger-5 brutal-card brutal-border bg-white p-8 shadow-brutal-md border-t-[6px] border-t-brutal-red">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-3xl">📧</span>
+                        <h3 class="font-black text-lg text-brutal-red">Emailing</h3>
+                        <span class="ml-auto font-mono text-[10px] bg-red-50 text-brutal-red px-2 py-1 brutal-border-2 font-bold">ENVOI</span>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-red flex-shrink-0"></span>
+                            <div><strong class="font-bold">Brevo</strong> <span class="text-gray-400 text-sm">— envoi emails + suivi stats</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-red flex-shrink-0"></span>
+                            <div><strong class="font-bold">Webhooks</strong> <span class="text-gray-400 text-sm">— retour ouvertures, clics, bounces</span></div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Monitoring -->
+                <div class="reveal stagger-6 brutal-card brutal-border bg-white p-8 shadow-brutal-md border-t-[6px] border-t-brutal-orange">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="text-3xl">📊</span>
+                        <h3 class="font-black text-lg text-brutal-orange">Monitoring</h3>
+                        <span class="ml-auto font-mono text-[10px] bg-orange-50 text-brutal-orange px-2 py-1 brutal-border-2 font-bold">SURVEILLANCE</span>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-orange flex-shrink-0"></span>
+                            <div><strong class="font-bold">Sentry</strong> <span class="text-gray-400 text-sm">— alertes erreurs temps reel</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-orange flex-shrink-0"></span>
+                            <div><strong class="font-bold">Grafana</strong> <span class="text-gray-400 text-sm">— dashboards performance</span></div>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-2 h-2 mt-2 bg-brutal-orange flex-shrink-0"></span>
+                            <div><strong class="font-bold">Docker</strong> <span class="text-gray-400 text-sm">— deploiement contenerise</span></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== SECTION: PARCOURS UTILISATEUR ===================== -->
+    <section id="parcours" class="py-20 lg:py-32 relative noise-bg grid-bg">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20">
+                <div class="reveal inline-block px-5 py-2 bg-brutal-purple text-white font-mono font-bold text-sm brutal-border-2 shadow-brutal mb-6">PARCOURS EN 8 ETAPES</div>
+                <h2 class="reveal stagger-1 text-4xl lg:text-6xl font-black leading-tight">
+                    Le parcours de Marie<span class="text-brutal-purple">.</span>
+                </h2>
+                <p class="reveal stagger-2 text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+                    De l'import des donnees a l'envoi de la campagne. Chaque etape detaillee avec ce que Marie fait et ce qui tourne en dessous.
+                </p>
+            </div>
+
+            <div class="relative">
+                <!-- Timeline line -->
+                <div class="timeline-line hidden md:block"></div>
+
+                <!-- =================== ETAPE 1 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-16 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-blue brutal-border-2 shadow-brutal-md items-center justify-center z-10">
+                        <span class="text-white font-black text-xl">1</span>
+                    </div>
+                    <div class="step-card brutal-border bg-white shadow-brutal-md overflow-hidden">
+                        <div class="bg-brutal-blue p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-blue">1</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">👤 MARIE AGIT</span>
+                            <h3 class="text-white font-black text-lg flex-1">Marie importe ses donnees historiques</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">Une seule fois au demarrage, puis a chaque nouvelle campagne terminee</p>
+
+                            <!-- Scenario -->
+                            <div class="brutal-border-2 bg-gray-50 p-5 mb-6 border-l-4 border-l-brutal-blue">
+                                <div class="font-mono text-[10px] font-bold text-gray-400 mb-2 tracking-wider">CONCRETEMENT</div>
+                                <p class="text-sm leading-relaxed">
+                                    Marie <strong class="text-brutal-blue">glisse-depose ses fichiers</strong> : 15 anciens documents (PDF, Word) + 3 Excel de stats.
+                                    Elle clique <strong class="text-brutal-blue">"Importer"</strong>. C'est tout.
+                                </p>
+                            </div>
+
+                            <!-- Screen mock -->
+                            <div class="screen-mock brutal-border-2 bg-brutal-black rounded-none overflow-hidden mb-6">
+                                <div class="flex items-center gap-2 px-4 py-2 bg-gray-900 border-b-2 border-gray-700">
+                                    <div class="w-3 h-3 rounded-full bg-brutal-red"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-yellow"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-green"></div>
+                                    <span class="ml-2 text-gray-500 font-mono text-xs">RAG Mail — Import</span>
+                                </div>
+                                <div class="p-5 text-sm">
+                                    <div class="border-2 border-dashed border-brutal-blue/40 p-6 text-center text-brutal-blue mb-4">
+                                        📂 Glissez vos fichiers ici (PDF, Word, Excel)
+                                    </div>
+                                    <div class="space-y-2 text-gray-300">
+                                        <div>✅ campagne_noel_2024.pdf — <span class="bg-brutal-green/20 text-brutal-green px-2 py-0.5 text-xs font-bold">importe</span></div>
+                                        <div>✅ stats_Q4_2024.xlsx — <span class="bg-brutal-green/20 text-brutal-green px-2 py-0.5 text-xs font-bold">importe</span></div>
+                                        <div>⏳ campagne_urgence.docx — <span class="text-brutal-yellow text-xs">en cours...</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tech bar -->
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 CE QUI TOURNE EN DESSOUS</div>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-blue"><span>🖥️</span> Next.js <span class="text-gray-400 font-normal">— upload</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>⚡</span> FastAPI <span class="text-gray-400 font-normal">— recoit</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-orange"><span>📦</span> S3/MinIO <span class="text-gray-400 font-normal">— stocke</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-purple"><span>📄</span> PyMuPDF <span class="text-gray-400 font-normal">— PDF</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-purple"><span>📝</span> python-docx <span class="text-gray-400 font-normal">— Word</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>📊</span> pandas <span class="text-gray-400 font-normal">— Excel</span></span>
+                                </div>
+                                <p class="text-xs text-gray-400 italic">Marie voit un bouton d'upload. En coulisses : Next.js envoie → FastAPI receptionne → S3 stocke → PyMuPDF/python-docx extraient le texte → pandas lit les Excel.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================== ETAPE 2 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-16 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-green brutal-border-2 shadow-brutal-md items-center justify-center z-10">
+                        <span class="text-white font-black text-xl">2</span>
+                    </div>
+                    <div class="step-card brutal-border bg-white shadow-brutal-md overflow-hidden">
+                        <div class="bg-brutal-green p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-green">2</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">⚙️ AUTOMATIQUE</span>
+                            <h3 class="text-white font-black text-lg flex-1">Nettoyage et structuration des donnees</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">Marie ne fait rien — tout se passe en arriere-plan</p>
+                            <div class="brutal-border-2 bg-gray-50 p-5 mb-6 border-l-4 border-l-brutal-green">
+                                <div class="font-mono text-[10px] font-bold text-gray-400 mb-2 tracking-wider">EN COULISSES</div>
+                                <p class="text-sm leading-relaxed">
+                                    La plateforme <strong class="text-brutal-green">verifie les colonnes Excel</strong>, <strong class="text-brutal-green">range tout en base</strong>.
+                                    Si un fichier a un souci → <strong class="text-brutal-green">rapport d'erreur</strong>.<br>
+                                    💡 Marie voit juste : "14 fichiers OK, 1 avec 2 anomalies."
+                                </p>
+                            </div>
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 CE QUI TOURNE EN DESSOUS</div>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>🔄</span> Celery + Redis <span class="text-gray-400 font-normal">— asynchrone</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>📊</span> pandas <span class="text-gray-400 font-normal">— nettoyage, validation</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🐘</span> PostgreSQL <span class="text-gray-400 font-normal">— stocke propre</span></span>
+                                </div>
+                                <p class="text-xs text-gray-400 italic">Celery lance le traitement en tache de fond. pandas nettoie et valide. PostgreSQL range dans un schema propre.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================== ETAPE 3 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-16 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-purple brutal-border-2 shadow-brutal-md items-center justify-center z-10">
+                        <span class="text-white font-black text-xl">3</span>
+                    </div>
+                    <div class="step-card brutal-border bg-white shadow-brutal-md overflow-hidden">
+                        <div class="bg-brutal-purple p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-purple">3</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">⚙️ AUTO</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">🤖 IA</span>
+                            <h3 class="text-white font-black text-lg flex-1">Extraction et normalisation des segments</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">La plateforme comprend qui sont les donateurs et les classe</p>
+                            <div class="brutal-border-2 bg-gray-50 p-5 mb-6 border-l-4 border-l-brutal-purple">
+                                <div class="font-mono text-[10px] font-bold text-gray-400 mb-2 tracking-wider">EXEMPLE</div>
+                                <p class="text-sm leading-relaxed">
+                                    Texte flou <em>"Donateurs ponctuels Noel 20€+"</em> → La plateforme <strong class="text-brutal-purple">transforme en attributs clairs</strong> : frequence, montant, cause, engagement.
+                                </p>
+                            </div>
+
+                            <!-- Screen mock: segments -->
+                            <div class="screen-mock brutal-border-2 bg-brutal-black rounded-none overflow-hidden mb-6">
+                                <div class="flex items-center gap-2 px-4 py-2 bg-gray-900 border-b-2 border-gray-700">
+                                    <div class="w-3 h-3 rounded-full bg-brutal-red"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-yellow"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-green"></div>
+                                    <span class="ml-2 text-gray-500 font-mono text-xs">RAG Mail — Segments</span>
+                                </div>
+                                <div class="p-5">
+                                    <div class="text-brutal-purple font-bold text-sm mb-3">47 segments identifies :</div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="bg-brutal-purple/20 text-brutal-purple px-3 py-1.5 text-xs font-bold brutal-border-2 border-brutal-purple/30">🎄 Ponctuels Noel — 20€+</span>
+                                        <span class="bg-brutal-purple/20 text-brutal-purple px-3 py-1.5 text-xs font-bold brutal-border-2 border-brutal-purple/30">🔁 Mensuels fideles — 15€</span>
+                                        <span class="bg-brutal-purple/20 text-brutal-purple px-3 py-1.5 text-xs font-bold brutal-border-2 border-brutal-purple/30">🆕 Nouveaux — 1er don</span>
+                                        <span class="bg-brutal-purple/20 text-brutal-purple px-3 py-1.5 text-xs font-bold brutal-border-2 border-brutal-purple/30">💎 Gros donateurs — 100€+</span>
+                                        <span class="bg-brutal-purple/20 text-brutal-purple px-3 py-1.5 text-xs font-bold brutal-border-2 border-brutal-purple/30">😴 Inactifs — 12 mois+</span>
+                                        <span class="bg-brutal-purple/20 text-brutal-purple px-3 py-1.5 text-xs font-bold brutal-border-2 border-brutal-purple/30">🏥 Urgence humanitaire</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 CE QUI TOURNE EN DESSOUS</div>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>⚡</span> FastAPI <span class="text-gray-400 font-normal">— orchestre</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-purple"><span>🧠</span> Claude/GPT <span class="text-gray-400 font-normal">— comprend texte flou</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🐘</span> PostgreSQL <span class="text-gray-400 font-normal">— segments normalises</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-purple"><span>🔢</span> Embeddings <span class="text-gray-400 font-normal">— vecteurs</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🎯</span> pgvector <span class="text-gray-400 font-normal">— index semantique</span></span>
+                                </div>
+                                <p class="text-xs text-gray-400 italic">Le LLM parse les textes flous → attributs propres. OpenAI Embeddings transforme chaque segment en vecteur. pgvector les indexe dans PostgreSQL pour la recherche semantique.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================== ETAPE 4 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-16 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-cyan brutal-border-2 shadow-brutal-md items-center justify-center z-10">
+                        <span class="text-white font-black text-xl">4</span>
+                    </div>
+                    <div class="step-card brutal-border bg-white shadow-brutal-md overflow-hidden">
+                        <div class="bg-brutal-cyan p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-cyan">4</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">👤 MARIE</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">🤖 IA</span>
+                            <h3 class="text-white font-black text-lg flex-1">Recherche semantique des donateurs</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">Pas besoin de connaitre le nom exact des segments</p>
+                            <div class="brutal-border-2 bg-gray-50 p-5 mb-6 border-l-4 border-l-brutal-cyan">
+                                <div class="font-mono text-[10px] font-bold text-gray-400 mb-2 tracking-wider">CONCRETEMENT</div>
+                                <p class="text-sm leading-relaxed">
+                                    Marie doit lancer un appel d'urgence. Elle <strong class="text-brutal-blue">tape</strong> : <em>"Quels donateurs cibler pour un appel urgent catastrophe naturelle ?"</em><br><br>
+                                    L'IA <strong class="text-brutal-purple">comprend le sens</strong> (urgence + humanitaire + reactivite) et propose les meilleurs segments :
+                                </p>
+                            </div>
+
+                            <!-- Screen mock: search -->
+                            <div class="screen-mock brutal-border-2 bg-brutal-black rounded-none overflow-hidden mb-6">
+                                <div class="flex items-center gap-2 px-4 py-2 bg-gray-900 border-b-2 border-gray-700">
+                                    <div class="w-3 h-3 rounded-full bg-brutal-red"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-yellow"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-green"></div>
+                                    <span class="ml-2 text-gray-500 font-mono text-xs">RAG Mail — Recherche</span>
+                                </div>
+                                <div class="p-5 text-sm">
+                                    <div class="flex items-center gap-2 bg-white/10 border-2 border-white/20 p-3 mb-4">
+                                        <span>🔍</span>
+                                        <span class="text-gray-200">Quels donateurs cibler pour un appel urgent catastrophe naturelle ?</span>
+                                    </div>
+                                    <div class="text-brutal-green font-bold mb-3">3 segments recommandes :</div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center bg-brutal-green/10 border-2 border-brutal-green/20 p-3">
+                                            <div><strong class="text-gray-200">🏥 Urgence humanitaire</strong> — <span class="text-gray-400">230 contacts</span><br><span class="text-gray-500 text-xs">Don ponctuel eleve — reactifs aux catastrophes</span></div>
+                                            <span class="text-brutal-green font-black text-lg">94%</span>
+                                        </div>
+                                        <div class="flex justify-between items-center bg-brutal-green/5 border-2 border-brutal-green/10 p-3">
+                                            <div><strong class="text-gray-200">💎 Gros donateurs annuels</strong> — <span class="text-gray-400">85 contacts</span><br><span class="text-gray-500 text-xs">100€+ — sensibles causes urgentes</span></div>
+                                            <span class="text-brutal-green font-bold text-lg">82%</span>
+                                        </div>
+                                        <div class="flex justify-between items-center bg-white/5 border-2 border-white/10 p-3">
+                                            <div><strong class="text-gray-200">🔁 Mensuels fideles</strong> — <span class="text-gray-400">410 contacts</span><br><span class="text-gray-500 text-xs">Don supplementaire possible</span></div>
+                                            <span class="text-gray-400 font-bold text-lg">67%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 CE QUI TOURNE EN DESSOUS</div>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-blue"><span>🖥️</span> Next.js <span class="text-gray-400 font-normal">— recherche + resultats</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>⚡</span> FastAPI <span class="text-gray-400 font-normal">— endpoint</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-purple"><span>🔢</span> Embeddings <span class="text-gray-400 font-normal">— question → vecteur</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🎯</span> pgvector <span class="text-gray-400 font-normal">— similarite cosinus</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🐘</span> PostgreSQL <span class="text-gray-400 font-normal">— filtres metier</span></span>
+                                </div>
+                                <p class="text-xs text-gray-400 italic">La question de Marie → vecteur (OpenAI Embeddings) → pgvector compare avec les vecteurs des segments → retourne les plus proches semantiquement. Le % est le score de similarite cosinus.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================== ETAPE 5 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-16 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-pink brutal-border-2 shadow-brutal-md items-center justify-center z-10">
+                        <span class="text-white font-black text-xl">5</span>
+                    </div>
+                    <div class="step-card brutal-border bg-white shadow-brutal-md overflow-hidden">
+                        <div class="bg-brutal-pink p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-pink">5</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">👤 MARIE AGIT</span>
+                            <h3 class="text-white font-black text-lg flex-1">Parametrage de la campagne (30 secondes)</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">Elle donne les instructions a l'IA</p>
+
+                            <!-- Screen mock: config -->
+                            <div class="screen-mock brutal-border-2 bg-brutal-black rounded-none overflow-hidden mb-6">
+                                <div class="flex items-center gap-2 px-4 py-2 bg-gray-900 border-b-2 border-gray-700">
+                                    <div class="w-3 h-3 rounded-full bg-brutal-red"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-yellow"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-green"></div>
+                                    <span class="ml-2 text-gray-500 font-mono text-xs">RAG Mail — Config</span>
+                                </div>
+                                <div class="p-5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <div class="text-gray-500 text-xs font-mono mb-1">TONALITE</div>
+                                            <div class="bg-white/10 border-2 border-white/20 p-3 text-gray-200">🧡 Urgent mais chaleureux</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-gray-500 text-xs font-mono mb-1">EMAILS</div>
+                                            <div class="bg-white/10 border-2 border-white/20 p-3 text-gray-200">2 emails</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-gray-500 text-xs font-mono mb-1">RELANCES</div>
+                                            <div class="bg-white/10 border-2 border-white/20 p-3 text-gray-200">1 relance</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-gray-500 text-xs font-mono mb-1">DOCS CONTEXTUELS</div>
+                                            <div class="bg-white/10 border-2 border-white/20 p-3 text-gray-200">📎 note_cadrage.pdf  📎 actu_seisme.txt</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-5 text-center">
+                                        <span class="inline-block bg-gradient-to-r from-brutal-purple to-brutal-blue px-8 py-3 text-white font-black text-sm brutal-border-2 border-white/30">🚀 Generer la campagne</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 CE QUI TOURNE EN DESSOUS</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-blue"><span>🖥️</span> Next.js <span class="text-gray-400 font-normal">— formulaire</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>⚡</span> FastAPI <span class="text-gray-400 font-normal">— config + lancement</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-orange"><span>📦</span> S3/MinIO <span class="text-gray-400 font-normal">— docs contextuels</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================== ETAPE 6 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-16 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-orange brutal-border-2 shadow-brutal-md items-center justify-center z-10">
+                        <span class="text-white font-black text-xl">6</span>
+                    </div>
+                    <div class="step-card brutal-border bg-white shadow-brutal-md overflow-hidden">
+                        <div class="bg-brutal-orange p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-orange">6</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">🤖 IA (RAG)</span>
+                            <h3 class="text-white font-black text-lg flex-1">L'IA genere la campagne complete</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">Emails + relances bases sur le contexte REEL</p>
+
+                            <!-- RAG explanation -->
+                            <div class="brutal-border-2 bg-purple-50 p-5 mb-6 border-l-4 border-l-brutal-purple">
+                                <div class="font-mono text-[10px] font-bold text-gray-400 mb-2 tracking-wider">LE RAG EN SIMPLE</div>
+                                <div class="space-y-2 text-sm leading-relaxed">
+                                    <p><strong class="text-brutal-purple font-black">R</strong>etrieval → <strong class="text-brutal-purple">recupere</strong> les meilleures campagnes passees similaires + stats + docs de Marie</p>
+                                    <p><strong class="text-brutal-purple font-black">A</strong>ugmented → tout ce contexte est <strong class="text-brutal-purple">injecte dans le prompt</strong></p>
+                                    <p><strong class="text-brutal-purple font-black">G</strong>eneration → le LLM <strong class="text-brutal-purple">redige les emails</strong> avec ce contexte, pas dans le vide</p>
+                                </div>
+                                <div class="mt-3 brutal-border-2 bg-white p-3 text-xs text-gray-500">
+                                    💡 C'est pour ca que les emails sont pertinents — l'IA s'appuie sur ce qui a deja marche pour cette asso.
+                                </div>
+                            </div>
+
+                            <!-- Screen mock: generated emails -->
+                            <div class="screen-mock brutal-border-2 bg-brutal-black rounded-none overflow-hidden mb-6">
+                                <div class="flex items-center gap-2 px-4 py-2 bg-gray-900 border-b-2 border-gray-700">
+                                    <div class="w-3 h-3 rounded-full bg-brutal-red"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-yellow"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-green"></div>
+                                    <span class="ml-2 text-gray-500 font-mono text-xs">RAG Mail — Generation</span>
+                                </div>
+                                <div class="p-5 text-sm">
+                                    <div class="text-brutal-purple font-bold mb-3">📩 Campagne generee — 3 emails :</div>
+                                    <div class="space-y-3">
+                                        <div class="bg-white/5 border-2 border-white/10 p-4">
+                                            <div class="text-gray-200 font-bold mb-1">Email 1 — "Chaque geste compte : urgence seisme"</div>
+                                            <div class="text-gray-500 italic text-xs">"Cher(e) [prenom], les images qui nous parviennent sont dechirantes. Vous qui avez deja montre votre generosite lors de [campagne precedente]..."</div>
+                                        </div>
+                                        <div class="bg-white/5 border-2 border-white/10 p-4">
+                                            <div class="text-gray-200 font-bold mb-1">Email 2 — "48h : votre don peut tout changer"</div>
+                                            <div class="text-gray-500 italic text-xs">"Les premiers secours sont arrives, mais les besoins depassent nos moyens. Avec 50 €, un kit d'urgence pour une famille..."</div>
+                                        </div>
+                                        <div class="bg-white/5 border-2 border-white/10 p-4">
+                                            <div class="text-gray-200 font-bold mb-1">Relance — "Avez-vous vu notre appel ?"</div>
+                                            <div class="text-gray-500 italic text-xs">"Nous comprenons que votre boite mail est pleine. Mais [prenom], chaque don fait une difference concrete..."</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 LE COEUR DU SYSTEME</div>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🎯</span> pgvector <span class="text-gray-400 font-normal">— Retrieval</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🐘</span> PostgreSQL <span class="text-gray-400 font-normal">— stats, contexte</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-purple"><span>🧠</span> Claude/GPT-4 <span class="text-gray-400 font-normal">— Generation</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>⚡</span> FastAPI <span class="text-gray-400 font-normal">— prompt + pipeline</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>🔄</span> Celery <span class="text-gray-400 font-normal">— arriere-plan</span></span>
+                                </div>
+                                <p class="text-xs text-gray-400 italic">FastAPI construit un prompt structure : instructions + ton + segments + meilleures campagnes passees (pgvector) + stats + docs contextuels. Ce prompt → API Claude/GPT → emails generes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================== ETAPE 7 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-16 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-yellow brutal-border-2 shadow-brutal-md items-center justify-center z-10">
+                        <span class="text-brutal-black font-black text-xl">7</span>
+                    </div>
+                    <div class="step-card brutal-border bg-white shadow-brutal-md overflow-hidden">
+                        <div class="bg-brutal-yellow p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-yellow">7</span>
+                            <span class="px-3 py-1 bg-black/20 text-brutal-black text-xs font-mono font-bold brutal-border-2 border-black/20">👤 MARIE AGIT</span>
+                            <h3 class="text-brutal-black font-black text-lg flex-1">Marie relit, modifie et approuve</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">L'humain garde TOUJOURS le dernier mot</p>
+                            <div class="brutal-border-2 bg-gray-50 p-5 mb-6 border-l-4 border-l-brutal-yellow">
+                                <div class="font-mono text-[10px] font-bold text-gray-400 mb-2 tracking-wider">CONCRETEMENT</div>
+                                <p class="text-sm leading-relaxed">Marie <strong class="text-brutal-blue">relit chaque email</strong>, ajuste si besoin, puis <strong class="text-brutal-blue">approuve</strong>.</p>
+                            </div>
+
+                            <!-- Status flow -->
+                            <div class="flex flex-wrap items-center gap-3 mb-6">
+                                <span class="brutal-border-2 bg-gray-100 px-4 py-2 text-sm font-bold text-gray-500">📝 Brouillon</span>
+                                <span class="text-gray-300 font-black">→</span>
+                                <span class="brutal-border-2 bg-brutal-yellow/20 px-4 py-2 text-sm font-bold text-yellow-700 border-brutal-yellow/40">👀 En revue</span>
+                                <span class="text-gray-300 font-black">→</span>
+                                <span class="brutal-border-2 bg-brutal-green/20 px-4 py-2 text-sm font-bold text-brutal-green border-brutal-green/40">✅ Approuve</span>
+                                <span class="text-gray-300 font-black">→</span>
+                                <span class="brutal-border-2 bg-brutal-blue/20 px-4 py-2 text-sm font-bold text-brutal-blue border-brutal-blue/40">🚀 Pret</span>
+                            </div>
+
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 CE QUI TOURNE EN DESSOUS</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-blue"><span>🖥️</span> Next.js <span class="text-gray-400 font-normal">— editeur + validation</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>⚡</span> FastAPI <span class="text-gray-400 font-normal">— workflow statuts</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🐘</span> PostgreSQL <span class="text-gray-400 font-normal">— historique</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =================== ETAPE 8 =================== -->
+                <div class="relative pl-0 md:pl-20 pb-4 reveal">
+                    <div class="hidden md:flex absolute left-0 top-0 w-14 h-14 bg-brutal-green brutal-border-2 shadow-brutal-md items-center justify-center z-10 animate-success-pulse">
+                        <span class="text-white font-black text-xl">8</span>
+                    </div>
+                    <div class="step-card brutal-border-4 bg-white shadow-brutal-lg overflow-hidden">
+                        <div class="bg-brutal-green p-4 flex items-center gap-3 flex-wrap">
+                            <span class="md:hidden w-10 h-10 bg-white brutal-border-2 flex items-center justify-center font-black text-brutal-green">8</span>
+                            <span class="px-3 py-1 bg-white/20 text-white text-xs font-mono font-bold brutal-border-2 border-white/30">👤+⚙️ ENVOI + SUIVI</span>
+                            <h3 class="text-white font-black text-lg flex-1">Envoi → Suivi resultats → Apprentissage</h3>
+                        </div>
+                        <div class="p-6 lg:p-8">
+                            <p class="text-gray-400 text-sm italic mb-6">1 clic pour envoyer, puis les resultats remontent automatiquement</p>
+                            <div class="brutal-border-2 bg-gray-50 p-5 mb-6 border-l-4 border-l-brutal-green">
+                                <div class="font-mono text-[10px] font-bold text-gray-400 mb-2 tracking-wider">CONCRETEMENT</div>
+                                <p class="text-sm leading-relaxed">
+                                    Marie clique <strong class="text-brutal-blue">"Envoyer"</strong>. <strong class="text-brutal-green">Brevo envoie les emails</strong>. Les stats remontent en temps reel. Ces donnees <strong class="text-brutal-green">enrichissent la base</strong> pour les prochaines campagnes.
+                                </p>
+                            </div>
+
+                            <!-- Screen mock: results -->
+                            <div class="screen-mock brutal-border-2 bg-brutal-black rounded-none overflow-hidden mb-6">
+                                <div class="flex items-center gap-2 px-4 py-2 bg-gray-900 border-b-2 border-gray-700">
+                                    <div class="w-3 h-3 rounded-full bg-brutal-red"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-yellow"></div>
+                                    <div class="w-3 h-3 rounded-full bg-brutal-green"></div>
+                                    <span class="ml-2 text-gray-500 font-mono text-xs">RAG Mail — Resultats</span>
+                                </div>
+                                <div class="p-5">
+                                    <div class="text-brutal-green font-bold text-sm mb-4">📊 Resultats apres 48h :</div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div class="bg-white/5 border-2 border-white/10 p-3 text-center">
+                                            <div class="text-2xl font-black text-gray-200 counter" data-target="315">0</div>
+                                            <div class="text-[10px] text-gray-500 font-mono mt-1">ENVOYES</div>
+                                        </div>
+                                        <div class="bg-white/5 border-2 border-white/10 p-3 text-center">
+                                            <div class="text-2xl font-black text-brutal-green counter" data-target="47" data-suffix="%">0%</div>
+                                            <div class="text-[10px] text-gray-500 font-mono mt-1">OUVERTURE</div>
+                                        </div>
+                                        <div class="bg-white/5 border-2 border-white/10 p-3 text-center">
+                                            <div class="text-2xl font-black text-brutal-blue counter" data-target="23" data-suffix="%">0%</div>
+                                            <div class="text-[10px] text-gray-500 font-mono mt-1">CLICS</div>
+                                        </div>
+                                        <div class="bg-white/5 border-2 border-white/10 p-3 text-center">
+                                            <div class="text-2xl font-black text-brutal-pink">4 820 €</div>
+                                            <div class="text-[10px] text-gray-500 font-mono mt-1">COLLECTE</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 text-xs text-gray-500">♻️ Resultats sauvegardes → les prochaines campagnes seront encore meilleures</div>
+                                </div>
+                            </div>
+
+                            <div class="brutal-border-2 bg-orange-50/50 p-5 border-l-4 border-l-brutal-orange">
+                                <div class="font-mono text-[10px] font-bold text-brutal-orange mb-3 tracking-wider">🔧 CE QUI TOURNE EN DESSOUS</div>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-red"><span>📧</span> Brevo (API) <span class="text-gray-400 font-normal">— envoi + delivrabilite</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-red"><span>📡</span> Webhooks <span class="text-gray-400 font-normal">— stats temps reel</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-green"><span>🔄</span> Celery <span class="text-gray-400 font-normal">— envoi par lots</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-pink"><span>🐘</span> PostgreSQL <span class="text-gray-400 font-normal">— boucle apprentissage</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-blue"><span>📊</span> Next.js + Recharts <span class="text-gray-400 font-normal">— dashboard</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-orange"><span>🚨</span> Sentry <span class="text-gray-400 font-normal">— alertes</span></span>
+                                    <span class="tech-chip brutal-border-2 bg-white px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 border-l-4 border-l-brutal-orange"><span>📈</span> Grafana <span class="text-gray-400 font-normal">— monitoring</span></span>
+                                </div>
+                                <p class="text-xs text-gray-400 italic">Brevo envoie + renvoie les stats via webhooks. Celery gere les envois par lots et retries. PostgreSQL stocke tout pour la boucle d'apprentissage. Sentry alerte si probleme. Grafana donne la vue d'ensemble.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end timeline -->
+        </div>
+    </section>
+
+    <!-- ===================== MARQUEE DIVIDER 2 ===================== -->
+    <div class="ticker-wrap brutal-border-2 border-l-0 border-r-0 bg-brutal-green py-3">
+        <div class="ticker">
+            <span class="inline-block mx-8 font-black text-sm text-white">DE 2-3 JOURS → 45 MINUTES</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">5 MIN IMPORT</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">5 MIN RECHERCHE</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">2 MIN PARAMETRAGE</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">20 MIN RELECTURE</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">1 CLIC ENVOI</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">DE 2-3 JOURS → 45 MINUTES</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">5 MIN IMPORT</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">5 MIN RECHERCHE</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">2 MIN PARAMETRAGE</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">20 MIN RELECTURE</span>
+            <span class="inline-block mx-6 font-black text-sm text-white">•</span>
+            <span class="inline-block mx-8 font-black text-sm text-white">1 CLIC ENVOI</span>
+        </div>
+    </div>
+
+    <!-- ===================== SECTION: RESULTATS ===================== -->
+    <section id="resultats" class="py-20 lg:py-32 relative noise-bg">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="reveal inline-block px-5 py-2 bg-brutal-green text-white font-mono font-bold text-sm brutal-border-2 shadow-brutal mb-6">RESULTAT</div>
+                <h2 class="reveal stagger-1 text-4xl lg:text-7xl font-black leading-tight">
+                    De 2-3 jours<span class="text-brutal-red">.</span><br>
+                    <span class="gradient-text" id="resultTitle">A 45 minutes</span><span class="text-brutal-green">.</span>
+                </h2>
+            </div>
+
+            <!-- Time breakdown -->
+            <div class="reveal stagger-2 grid grid-cols-2 sm:grid-cols-5 gap-4 max-w-4xl mx-auto mb-16">
+                <div class="tooltip-trigger brutal-card brutal-border bg-white p-5 shadow-brutal text-center">
+                    <div class="text-3xl font-black text-brutal-blue counter" data-target="5">0</div>
+                    <div class="text-xs font-mono text-gray-400 mt-1">MIN IMPORT</div>
+                    <div class="tooltip">Glisser-deposer les fichiers</div>
+                </div>
+                <div class="tooltip-trigger brutal-card brutal-border bg-white p-5 shadow-brutal text-center">
+                    <div class="text-3xl font-black text-brutal-cyan counter" data-target="5">0</div>
+                    <div class="text-xs font-mono text-gray-400 mt-1">MIN RECHERCHE</div>
+                    <div class="tooltip">Recherche semantique IA</div>
+                </div>
+                <div class="tooltip-trigger brutal-card brutal-border bg-white p-5 shadow-brutal text-center">
+                    <div class="text-3xl font-black text-brutal-pink counter" data-target="2">0</div>
+                    <div class="text-xs font-mono text-gray-400 mt-1">MIN PARAMETRAGE</div>
+                    <div class="tooltip">Ton, nombre d'emails, docs</div>
+                </div>
+                <div class="tooltip-trigger brutal-card brutal-border bg-white p-5 shadow-brutal text-center">
+                    <div class="text-3xl font-black text-brutal-purple counter" data-target="20">0</div>
+                    <div class="text-xs font-mono text-gray-400 mt-1">MIN RELECTURE</div>
+                    <div class="tooltip">Verifier et ajuster les emails</div>
+                </div>
+                <div class="tooltip-trigger brutal-card brutal-border bg-brutal-green text-white p-5 shadow-brutal text-center col-span-2 sm:col-span-1 animate-success-pulse">
+                    <div class="text-3xl font-black counter" data-target="1">0</div>
+                    <div class="text-xs font-mono text-green-200 mt-1">CLIC ENVOI</div>
+                    <div class="tooltip">Un seul clic !</div>
+                </div>
+            </div>
+
+            <!-- Final message -->
+            <div class="reveal stagger-3 brutal-border-4 bg-gradient-to-br from-brutal-green/10 to-brutal-blue/10 p-8 lg:p-12 shadow-brutal-xl text-center max-w-3xl mx-auto border-brutal-green">
+                <div class="text-5xl mb-4">⏱️</div>
+                <h3 class="text-2xl lg:text-3xl font-black mb-4">45 minutes au lieu de 2-3 jours</h3>
+                <p class="text-gray-500 text-lg leading-relaxed max-w-xl mx-auto">
+                    5 min import · 5 min recherche · 2 min parametrage · 20 min relecture · 1 clic envoi
+                </p>
+                <div class="mt-6 brutal-border-2 bg-white inline-block px-6 py-3 shadow-brutal">
+                    <p class="font-bold text-sm">Et chaque campagne enrichit la base → <span class="text-brutal-green font-black">les suivantes sont encore meilleures</span>.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer class="brutal-border-2 border-l-0 border-r-0 border-b-0 bg-brutal-black text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <div class="w-8 h-8 bg-brutal-blue brutal-border-2 border-white/30 flex items-center justify-center">
+                    <span class="text-white font-black">R</span>
+                </div>
+                <span class="font-black text-lg">RAG <span class="text-brutal-blue">Mail</span></span>
+            </div>
+            <p class="text-gray-500 text-sm font-mono mb-2">Plateforme RAG Emailing — Parcours Utilisateur</p>
+            <p class="text-gray-600 text-xs font-mono" id="footerSecret">Made with precision. Click me 5 times for a surprise.</p>
+        </div>
+    </footer>
+
+    <!-- ===================== JAVASCRIPT ===================== -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // ========== SCROLL REVEAL ==========
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // ========== PROGRESS BAR ==========
+        const progressBar = document.getElementById('progressBar');
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const progress = (scrollTop / scrollHeight) * 100;
+            progressBar.style.width = progress + '%';
+        });
+
+        // ========== COUNTER ANIMATION ==========
+        const counters = document.querySelectorAll('.counter');
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.dataset.counted) {
+                    entry.target.dataset.counted = 'true';
+                    const target = parseInt(entry.target.dataset.target);
+                    const suffix = entry.target.dataset.suffix || '';
+                    const duration = 1500;
+                    const start = performance.now();
+                    const animate = (now) => {
+                        const elapsed = now - start;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const eased = 1 - Math.pow(1 - progress, 3);
+                        const current = Math.round(target * eased);
+                        entry.target.textContent = current + suffix;
+                        if (progress < 1) requestAnimationFrame(animate);
+                        else entry.target.style.animation = 'count-pulse 0.3s ease';
+                    };
+                    requestAnimationFrame(animate);
+                }
+            });
+        }, { threshold: 0.5 });
+        counters.forEach(c => counterObserver.observe(c));
+
+        // ========== NAVBAR SHADOW ON SCROLL ==========
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.style.boxShadow = '0 4px 0 0 #1a1a1a';
+            } else {
+                navbar.style.boxShadow = 'none';
+            }
+        });
+
+        // ========== EASTER EGG: KONAMI CODE → CONFETTI ==========
+        let konamiSequence = [];
+        const konamiCode = [38,38,40,40,37,39,37,39,66,65]; // ↑↑↓↓←→←→BA
+        document.addEventListener('keydown', (e) => {
+            konamiSequence.push(e.keyCode);
+            if (konamiSequence.length > 10) konamiSequence.shift();
+            if (konamiSequence.join(',') === konamiCode.join(',')) {
+                launchConfetti();
+                konamiSequence = [];
+            }
+        });
+
+        function launchConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#0066FF','#FF3366','#FFE500','#00CC88','#7C3AED','#FF6B00','#06B6D4'];
+            for (let i = 0; i < 80; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = (Math.random() * 10 + 5) + 'px';
+                confetti.style.height = (Math.random() * 10 + 5) + 'px';
+                confetti.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+                confetti.style.animationDelay = (Math.random() * 0.8) + 's';
+                if (Math.random() > 0.5) confetti.style.borderRadius = '50%';
+                container.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 4000);
+            }
+        }
+
+        // ========== EASTER EGG: FOOTER SECRET CLICK ==========
+        let footerClicks = 0;
+        const footerSecret = document.getElementById('footerSecret');
+        footerSecret.addEventListener('click', () => {
+            footerClicks++;
+            if (footerClicks === 3) {
+                footerSecret.textContent = 'Presque... encore 2 clics !';
+                footerSecret.style.color = '#FFE500';
+            }
+            if (footerClicks >= 5) {
+                launchConfetti();
+                footerSecret.textContent = '🎉 Bravo ! Tu as trouve l\'easter egg ! Essaie aussi le Konami Code (↑↑↓↓←→←→BA)';
+                footerSecret.style.color = '#00CC88';
+                footerClicks = 0;
+            }
+        });
+
+        // ========== EASTER EGG: LOGO CLICK → TERMINAL ==========
+        let logoClicks = 0;
+        const logoBtn = document.getElementById('logoBtn');
+        const terminalOverlay = document.getElementById('terminalOverlay');
+
+        logoBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            logoClicks++;
+            if (logoClicks >= 7) {
+                terminalOverlay.classList.add('active');
+                logoClicks = 0;
+            }
+        });
+        terminalOverlay.addEventListener('click', () => terminalOverlay.classList.remove('active'));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') terminalOverlay.classList.remove('active');
+        });
+
+        // ========== EASTER EGG: RESULT TITLE CLICK → TIME WARP ==========
+        const resultTitle = document.getElementById('resultTitle');
+        resultTitle.addEventListener('click', () => {
+            resultTitle.style.animation = 'none';
+            resultTitle.offsetHeight;
+            resultTitle.style.animation = 'count-pulse 0.5s ease, gradient-shift 4s ease infinite';
+            launchConfetti();
+        });
+        resultTitle.style.cursor = 'pointer';
+
+        // ========== RIPPLE EFFECT ON BUTTONS ==========
+        document.querySelectorAll('.magnetic-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                const rect = this.getBoundingClientRect();
+                ripple.style.left = (e.clientX - rect.left) + 'px';
+                ripple.style.top = (e.clientY - rect.top) + 'px';
+                ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // ========== STEP NUMBER PULSE ON SCROLL ==========
+        document.querySelectorAll('.step-card').forEach(card => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const stepNum = entry.target.closest('.relative')?.querySelector('[class*="w-14"]');
+                    if (entry.isIntersecting && stepNum) {
+                        stepNum.style.animation = 'bounce-in 0.5s ease forwards';
+                    }
+                });
+            }, { threshold: 0.3 });
+            observer.observe(card);
+        });
+
+        // ========== SMOOTH SCROLL FOR NAV LINKS ==========
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                e.preventDefault();
+                const target = document.querySelector(targetId);
+                if (target) {
+                    const offset = 80;
+                    const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                }
+            });
+        });
+
+    });
+    </script>
+
+</body>
+</html>
